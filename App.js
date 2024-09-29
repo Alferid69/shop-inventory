@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
-import WelcomeScreen from "./welcome";
-import Shop from "./shop";
+import WelcomeScreen from "./WelcomeScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Shop from "./Shop";
+import UpdateCompanyName from "./UpdateCompanyName";
+import Footer from "./Footer";
 
 export default function App() {
   const [userInfo, setUserInfo] = useState({
     isLoggedIn: false,
     companyName: "",
   });
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const getUserInfoFromStorage = async () => {
     try {
       const storedUserInfo = await AsyncStorage.getItem("userInfo");
-      return storedUserInfo ? JSON.parse(storedUserInfo) : { isLoggedIn: false, companyName: "" };
+      return storedUserInfo
+        ? JSON.parse(storedUserInfo)
+        : { isLoggedIn: false, companyName: "" };
     } catch (error) {
       console.error(error);
       return { isLoggedIn: false, companyName: "" };
@@ -44,15 +49,19 @@ export default function App() {
 
   return (
     <>
-      {!userInfo.isLoggedIn ? (
+    {isUpdating ? <UpdateCompanyName userInfo={userInfo} setUserInfo={setUserInfo} setIsUpdating={setIsUpdating} /> :
+      !userInfo.isLoggedIn ? (
         <WelcomeScreen
           setIsLoggedIn={(status) => handleLogin(status, userInfo.companyName)}
           companyName={userInfo.companyName}
-          setCompanyName={(name) => setUserInfo((prev) => ({ ...prev, companyName: name }))}
+          setCompanyName={(name) =>
+            setUserInfo((prev) => ({ ...prev, companyName: name }))
+          }
         />
       ) : (
-        <Shop companyName={userInfo.companyName} />
+        <Shop setIsUpdating={setIsUpdating} companyName={userInfo.companyName} />
       )}
+      <Footer />
     </>
   );
 }

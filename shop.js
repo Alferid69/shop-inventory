@@ -14,10 +14,9 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import { styles } from "./styles";
+import { FontAwesome } from "@expo/vector-icons";
 
-
-const Shop = ({companyName}) => {
-
+const Shop = ({ companyName, setIsUpdating }) => {
   const getClothesFromStorage = async () => {
     try {
       const storedClothes = await AsyncStorage.getItem("clothes");
@@ -102,7 +101,7 @@ const Shop = ({companyName}) => {
   const filterSales = () => {
     let filtered = soldClothes;
 
-    if (selectedType !== 'all') {
+    if (selectedType !== "all") {
       filtered = filtered.filter((sold) => sold.type === selectedType);
     }
 
@@ -114,6 +113,8 @@ const Shop = ({companyName}) => {
   };
 
   const registerCloth = () => {
+    // edit feature
+    if (editMode.isEdit) updateCloth();
     if (newCloth.type && newCloth.price && newCloth.quantity) {
       const existingClothIndex = clothes.findIndex(
         (cloth) => cloth.type === newCloth.type
@@ -182,7 +183,9 @@ const Shop = ({companyName}) => {
         {
           text: "አዎ ይጥፋ!",
           onPress: async () => {
-            await AsyncStorage.clear();
+            await AsyncStorage.removeItem("soldClothes");
+            await AsyncStorage.removeItem("clothes");
+            // await AsyncStorage.clear();
             setClothes([]);
             setSoldClothes([]);
             setTotalSales(0);
@@ -352,7 +355,7 @@ const Shop = ({companyName}) => {
 
   const getSalesSummary = () => {
     const summary = {};
-    
+
     // Initialize summary with all cloth types
     clothes.forEach(({ type, quantity, price }) => {
       summary[type] = {
@@ -363,7 +366,7 @@ const Shop = ({companyName}) => {
         date: new Date().toDateString(),
       };
     });
-  
+
     // Calculate the total quantity and revenue from all soldClothes, not filteredSales
     soldClothes.forEach(({ type, quantity, total }) => {
       if (summary[type]) {
@@ -371,16 +374,15 @@ const Shop = ({companyName}) => {
         summary[type].totalRevenue += total;
       }
     });
-  
+
     // Convert the summary object into an array
     return Object.entries(summary).map(([type, data]) => ({
       type,
       ...data,
     }));
   };
-  
-  let salesSummary = getSalesSummary();
 
+  let salesSummary = getSalesSummary();
 
   // In your render function
   const renderSummary = () => {
@@ -395,28 +397,57 @@ const Shop = ({companyName}) => {
     ));
   };
 
+  // edit feature
+  const [editMode, setEditMode] = useState({
+    item: null,
+    isEdit: false,
+    isSaleEdit: false,
+  });
+
+  const updateCloth = () => {
+    const updatedClothes = clothes.map((cloth, index) =>
+      index === editMode.item ? newCloth : cloth
+    );
+    setClothes(updatedClothes);
+    setEditMode({ item: null, isEdit: false });
+  };
+
+  const editCloth = (index) => {
+    setEditMode({ item: index, isEdit: true });
+    setNewCloth(clothes[index]);
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView>
-        <Text style={styles.title}>{companyName} Shop</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{companyName} Inventory</Text>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => setIsUpdating(true)}
+          >
+            <FontAwesome name="edit" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.containerBase}>
           <View style={styles.registerContainer}>
             <Text style={styles.label}>እቃ መመዝገቢያ</Text>
             <TextInput
-              placeholder="Cloth Type"
+              placeholder="እቃ ስም"
               value={newCloth.type}
               onChangeText={(value) => handleClothChange("type", value)}
               style={styles.input}
             />
             <TextInput
-              placeholder="Price"
+              placeholder="ዋጋ"
               value={newCloth.price}
               keyboardType="numeric"
               onChangeText={(value) => handleClothChange("price", value)}
               style={styles.input}
             />
             <TextInput
-              placeholder="Quantity"
+              placeholder="ብዛት"
               value={newCloth.quantity}
               keyboardType="numeric"
               onChangeText={(value) => handleClothChange("quantity", value)}
@@ -426,21 +457,37 @@ const Shop = ({companyName}) => {
               style={[styles.buttonBase, styles.registerButton]}
               onPress={registerCloth}
             >
-              <Text style={styles.buttonText}>Register</Text>
+              <Text style={styles.buttonText}>
+                {editMode.isEdit ? "እቃ አስተካክል" : "እቃ መዝግብ"}
+              </Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>የተመዘገቡ እቃዎች</Text>
-            <FlatList
-              data={clothes}
-              keyExtractor={(item, index) => `${item.type}-${index}`} // Append index to make it unique
-              renderItem={({ item }) => (
-                <View style={styles.item}>
-                  <Text>ስም: {item.type}</Text>
-                  <Text>ዋጋ: ${item.price}</Text>
-                  <Text>ቀሪ ብዛት: {item.quantity}</Text>
-                </View>
-              )}
-            />
+            {clothes.length > 0 && (
+              <View style={styles.availableItemsContainer}>
+                <Text style={styles.label}>የተመዘገቡ እቃዎች</Text>
+                <FlatList
+                  data={clothes}
+                  keyExtractor={(item, index) => `${item.type}-${index}`}
+                  renderItem={({ item, index }) => (
+                    <>
+                      <View style={styles.item}>
+                        <Text style={styles.itemText}>ስም: {item.type}</Text>
+                        <Text style={styles.itemText}>ዋጋ: ${item.price}</Text>
+                        <Text style={styles.itemText}>
+                          ቀሪ ብዛት: {item.quantity}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.editItemButton}
+                          onPress={() => editCloth(index)}
+                        >
+                          <Text style={styles.editButtonText}>Edit</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
+                />
+              </View>
+            )}
           </View>
 
           <View style={styles.sellContainer}>
@@ -480,35 +527,39 @@ const Shop = ({companyName}) => {
               style={[styles.buttonBase, styles.sellButton]}
               onPress={registerSale} // Handle the click here
             >
-              <Text style={styles.buttonText}>Register Sale</Text>
+              <Text style={styles.buttonText}>ሽያጭ መዝግብ</Text>
             </TouchableOpacity>
 
-            <Text style={styles.label}>የተሸጡ እቃዎች</Text>
-            <View style={styles.picker}>
-              <Picker
-                selectedValue={selectedType}
-                onValueChange={(value) => setSelectedType(value)}
-              >
-                <Picker.Item label="ሁሉም አይነት" value="all" />
-                {clothes.map((cloth) => (
-                  <Picker.Item
-                    key={cloth.type}
-                    label={cloth.type}
-                    value={cloth.type}
-                  />
-                ))}
-              </Picker>
-            </View>
+            {soldClothes.length > 1 && (
+              <View style={styles.soldItemsContainer}>
+                <Text style={styles.label}>የተሸጡ እቃዎች</Text>
+                <View style={styles.picker}>
+                  <Picker
+                    selectedValue={selectedType}
+                    onValueChange={(value) => setSelectedType(value)}
+                  >
+                    <Picker.Item label="ሁሉም አይነት" value="all" />
+                    {clothes.map((cloth) => (
+                      <Picker.Item
+                        key={cloth.type}
+                        label={cloth.type}
+                        value={cloth.type}
+                      />
+                    ))}
+                  </Picker>
+                </View>
 
-            <FlatList
-              data={filteredSales}
-              keyExtractor={(item) => item.quantity + item.type}
-              renderItem={renderSoldCloth}
-            />
+                <FlatList
+                  data={filteredSales}
+                  keyExtractor={(item) => item.quantity + item.type}
+                  renderItem={renderSoldCloth}
+                />
+              </View>
+            )}
           </View>
         </View>
         <View style={styles.summary}>
-          <Text style={styles.label}>Sales Summary</Text>
+          <Text style={styles.label}>የሽያጭ ማጠቃለያ</Text>
           {renderSummary()}
           <Text>የዛሪ አጠቃላይ ሽያጭ: ${totalSales}</Text>
         </View>
@@ -518,21 +569,21 @@ const Shop = ({companyName}) => {
             style={[styles.buttonBase, styles.exportButton]}
             onPress={() => exportDataToCsv(salesSummary)}
           >
-            <Text style={styles.exportButtonText}>Export to CSV</Text>
+            <Text style={styles.exportButtonText}>ወደ CSV ቀይር</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.buttonBase, styles.pdfButton]}
             onPress={() => exportDataToPdf(salesSummary)}
           >
-            <Text style={styles.exportButtonText}>Export to PDF</Text>
+            <Text style={styles.exportButtonText}>ወደ PDF ቀይር</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.buttonBase, styles.resetButton]}
             onPress={resetShop}
           >
-            <Text style={styles.resetButtonText}>Reset Shop</Text>
+            <Text style={styles.resetButtonText}>ሙሉ እቃ አጥፋ</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

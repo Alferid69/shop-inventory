@@ -23,7 +23,17 @@ export const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 45,
     backgroundColor: "#f4f7fb",
-    paddingBottom: 45
+    paddingBottom: 59
+  },
+  availableItemsContainer: {
+    borderWidth: 2,
+    borderRadius: 5,
+    borderColor: '#0086B3'
+  },
+  soldItemsContainer: {
+    borderWidth: 2,
+    borderRadius: 5,
+    borderColor: '#804200'
   },
   title: {
     fontSize: 28,
@@ -51,6 +61,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 2,
+    position: 'relative'
   },
   soldItem: {
     padding: 16,
@@ -192,5 +203,45 @@ export const styles = StyleSheet.create({
     borderWidth: 3,
     borderRadius: 10,
     padding: 8,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    margin: 14,
+    backgroundColor: '#5a67d8', // Background color for the header
+    padding: 15, // Padding around the header
+    borderRadius: 10, // Rounded corners
+    elevation: 3, // Add some shadow for depth
+    marginBottom: 15, // Spacing below the header
+    
+  },
+  title: {
+    fontSize: 22, // Larger font size for the title
+    fontWeight: 'bold', // Bold text
+    color: '#fff', // White color for the text
+  },
+  editButton: {
+    backgroundColor: '#6b7280', // Button background color
+    borderRadius: 50, // Circular button
+    padding: 10, // Padding inside the button
+    justifyContent: 'center', // Center icon in button
+    alignItems: 'center', // Center icon in button
+  },
+  editItemButton: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    marginTop: 5,
+    alignSelf: 'flex-start',
+    position: 'absolute',
+    end: 10,
+    top: '50%'
+  },
+  editButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
