@@ -530,7 +530,7 @@ const Shop = ({ companyName, setIsUpdating }) => {
               <Text style={styles.buttonText}>ሽያጭ መዝግብ</Text>
             </TouchableOpacity>
 
-            {soldClothes.length > 1 && (
+            {soldClothes.length > 0 && (
               <View style={styles.soldItemsContainer}>
                 <Text style={styles.label}>የተሸጡ እቃዎች</Text>
                 <View style={styles.picker}>
